@@ -1,0 +1,68 @@
+apiVersion: eksctl.io/v1alpha5
+kind: ClusterConfig
+
+metadata:
+  name: skills-eks-cluster
+  region: ap-northeast-2
+  version: "latest"
+
+vpc:
+  subnets:
+    private:
+      ap-northeast-2a:
+        id: subnet-0665279ae6e13fad8
+      ap-northeast-2b:
+        id: subnet-04e67a258cb6bda51
+
+nodeGroups:
+  - name: skills-eks-addon-nodegroup
+    instanceType: t4g.large
+    desiredCapacity: 2
+    minSize: 2
+    maxSize: 4
+    privateNetworking: true
+    labels:
+      Name: skills-eks-addon-node
+    subnets:
+      - subnet-0665279ae6e13fad8
+      - subnet-04e67a258cb6bda51
+
+  - name: skills-eks-app-nodegroup
+    instanceType: m6g.large
+    desiredCapacity: 2
+    minSize: 2
+    maxSize: 4
+    privateNetworking: true
+    labels:
+      Name: skills-eks-app-node
+    subnets:
+      - subnet-0665279ae6e13fad8
+      - subnet-04e67a258cb6bda51
+
+fargateProfiles:
+  - name: skills-eks-app-profile
+    selectors:
+      - namespace: skills
+        labels:
+          app: token
+
+iam:
+  withOIDC: true
+  serviceAccounts:
+    - metadata:
+        name: aws-load-balancer-controller
+        namespace: kube-system
+      wellKnownPolicies:
+        awsLoadBalancerController: true
+
+cloudWatch:
+  clusterLogging:
+    enableTypes: ["*"]
+
+secretsEncryption:
+  keyARN: arn:aws:kms:ap-northeast-2:362708816803:key/07b90794-1839-48a0-a8c9-c06239a6f91e
+
+privateCluster:
+  enabled: true
+  additionalEndpointServices:
+    - "autoscaling"

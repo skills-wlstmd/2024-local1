@@ -1,0 +1,1 @@
+redis-cli -h skills-redis-cluster-001.skills-redis-cluster.tctbtd.apn2.cache.amazonaws.com -p 6378 cluster info
