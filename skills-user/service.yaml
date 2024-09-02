@@ -1,14 +1,14 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: token
+  name: user
   namespace: skills
 spec:
   selector:
-    app: token
+    app: user
   type: ClusterIP
   ports:
-    - name: token
+    - name: user
       protocol: TCP
       port: 8080
       targetPort: 8080

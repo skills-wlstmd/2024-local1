@@ -31,46 +31,35 @@ spec:
             - name: MONGODB_HOST
               valueFrom:
                 secretKeyRef:
-                  name: app-secrets
+                  name: user
                   key: MONGODB_HOST
             - name: MONGODB_PORT
               valueFrom:
                 secretKeyRef:
-                  name: app-secrets
+                  name: user
                   key: MONGODB_PORT
             - name: MONGODB_USERNAME
               valueFrom:
                 secretKeyRef:
-                  name: app-secrets
+                  name: user
                   key: MONGODB_USERNAME
             - name: MONGODB_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: app-secrets
+                  name: user
                   key: MONGODB_PASSWORD
             - name: AWS_REGION
               valueFrom:
                 secretKeyRef:
-                  name: app-secrets
+                  name: user
                   key: AWS_REGION
             - name: AWS_SECRET_NAME
               valueFrom:
                 secretKeyRef:
-                  name: app-secrets
+                  name: user
                   key: AWS_SECRET_NAME
             - name: TOKEN_ENDPOINT
               valueFrom:
                 secretKeyRef:
-                  name: app-secrets
+                  name: user
                   key: TOKEN_ENDPOINT
-          livenessProbe:
-            tcpSocket:
-              port: 8080
-            initialDelaySeconds: 5
-            timeoutSeconds: 5
-          readinessProbe:
-            httpGet:
-              path: /health
-              port: 8080
-            initialDelaySeconds: 5
-            timeoutSeconds: 2

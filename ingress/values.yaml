@@ -1,0 +1,1 @@
+nodeSelector: { eks.amazonaws.com/nodegroup: skills-eks-addon-nodegroup }

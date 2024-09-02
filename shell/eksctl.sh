@@ -40,74 +40,8 @@ aws kms create-key --description "KMS key for EKS secrets encryption"
 # Namespace 생성
 kubectl create namespace skills
 
-# IAM OIDC 제공자 연결
-eksctl utils associate-iam-oidc-provider --region=ap-northeast-2 --cluster=skills-eks-cluster --approve
-
-# IAM 정책 생성
-aws iam create-policy --policy-name SecretsManagerPolicy --policy-document file://secret-policy.json
-
-# IAM 서비스 계정 생성
-eksctl create iamserviceaccount \
-    --name external-secrets-cert-controller \
-    --region=ap-northeast-2 \
-    --cluster skills-eks-cluster \
-    --namespace=skills \
-    --attach-policy-arn arn:aws:iam::362708816803:policy/SecretsManagerPolicy \
-    --override-existing-serviceaccounts \
-    --approve
-
-# Helm 저장소 추가 및 업데이트
-helm repo add external-secrets https://charts.external-secrets.io
-helm repo update
-
-# 서비스 계정에 주석 및 라벨 추가
-kubectl annotate serviceaccount external-secrets-cert-controller \
-  meta.helm.sh/release-name=external-secrets \
-  meta.helm.sh/release-namespace=skills \
-  -n skills \
-  --overwrite
-
-kubectl label serviceaccount external-secrets-cert-controller \
-  app.kubernetes.io/managed-by=Helm \
-  -n skills \
-  --overwrite
-
-# values.yaml 파일 생성
-cat > values.yaml <<EOF
-installCRDs: true
-nodeSelector:
-  eks.amazonaws.com/nodegroup: skills-eks-addon-nodegroup
-webhook:
-  nodeSelector:
-    eks.amazonaws.com/nodegroup: skills-eks-addon-nodegroup
-certController:
-  nodeSelector:
-    eks.amazonaws.com/nodegroup: skills-eks-addon-nodegroup
-EOF
-
-# External Secrets 설치
-helm install external-secrets \
-  external-secrets/external-secrets \
-  -n kube-system \
-  -f values.yaml \
-  --set serviceAccount.create=false
-
-kubectl apply -f secretstore.yaml
-kubectl apply -f external-secret-operator.yaml
-
-# skills-user 리소스 배포
-kubectl apply -k skills-user/
-kubectl delete -k skills-user/
-
-# skills-token 리소스 배포
-kubectl apply -k skills-token/
-kubectl delete -k skills-token/
-
 # Pod 상태 확인
 kubectl get pod -n skills
 
 # 모든 Pod 삭제 (필요시)
 kubectl delete pod -n skills --all
-
-aws secretsmanager get-secret-value --secret-id aws-secret --query SecretString --output text
-aws secretsmanager get-secret-value --secret-id redis/credentials --query SecretString --output text
