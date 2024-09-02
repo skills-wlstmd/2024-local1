@@ -4,47 +4,14 @@ kind: ClusterConfig
 metadata:
   name: skills-eks-cluster
   region: ap-northeast-2
-  version: "latest"
+  version: "1.29"
 
-vpc:
-  subnets:
-    private:
-      ap-northeast-2a:
-        id: subnet-0665279ae6e13fad8
-      ap-northeast-2b:
-        id: subnet-04e67a258cb6bda51
+secretsEncryption:
+  keyARN: kms_arn
 
-nodeGroups:
-  - name: skills-eks-addon-nodegroup
-    instanceType: t4g.large
-    desiredCapacity: 2
-    minSize: 2
-    maxSize: 4
-    privateNetworking: true
-    labels:
-      Name: skills-eks-addon-node
-    subnets:
-      - subnet-0665279ae6e13fad8
-      - subnet-04e67a258cb6bda51
-
-  - name: skills-eks-app-nodegroup
-    instanceType: m6g.large
-    desiredCapacity: 2
-    minSize: 2
-    maxSize: 4
-    privateNetworking: true
-    labels:
-      Name: skills-eks-app-node
-    subnets:
-      - subnet-0665279ae6e13fad8
-      - subnet-04e67a258cb6bda51
-
-fargateProfiles:
-  - name: skills-eks-app-profile
-    selectors:
-      - namespace: skills
-        labels:
-          app: token
+cloudWatch:
+  clusterLogging:
+    enableTypes: ["*"]
 
 iam:
   withOIDC: true
@@ -54,15 +21,42 @@ iam:
         namespace: kube-system
       wellKnownPolicies:
         awsLoadBalancerController: true
+    - metadata:
+        name: cert-manager
+        namespace: cert-manager
+      wellKnownPolicies:
+        certManager: true
+vpc:
+  securityGroup: sg_id # https 통신
+  subnets:
+    public:
+      ap-northeast-2a: { id: public_a }
+      ap-northeast-2b: { id: public_b }
+    private:
+      ap-northeast-2a: { id: private_a }
+      ap-northeast-2b: { id: private_a }
+  clusterEndpoints:
+    publicAccess: false
+    privateAccess: true
 
-cloudWatch:
-  clusterLogging:
-    enableTypes: ["*"]
+managedNodeGroups:
+  - name: skills-eks-app-nodegroup
+    instanceName: skills-eks-app-node
+    instanceType: t4g.large
+    desiredCapacity: 2
+    minSize: 2
+    maxSize: 10
 
-secretsEncryption:
-  keyARN: arn:aws:kms:ap-northeast-2:362708816803:key/07b90794-1839-48a0-a8c9-c06239a6f91e
+  - name: skills-eks-addon-nodegroup
+    instanceName: skills-eks-addon-node
+    instanceType: m6.large
+    desiredCapacity: 2
+    minSize: 2
+    maxSize: 10
 
-privateCluster:
-  enabled: true
-  additionalEndpointServices:
-    - "autoscaling"
+fargateProfiles:
+  - name: skills-eks-app-profile
+    selectors:
+      - namespace: skills
+        labels:
+          app: token
